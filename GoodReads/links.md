@@ -1,8 +1,8 @@
 # About:
  - links to any good articles / videos etc
  - links to be placed in the tables below & under the specific category for ease of reference
- - [markdown guide] (https://guides.github.com/features/mastering-markdown/)
- 
+ - [markdown guide](https://guides.github.com/features/mastering-markdown/)
+
 # ConvNets
 Sub-Category | Link  | Comment
 --- | --- |---
