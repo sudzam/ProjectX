@@ -20,3 +20,8 @@ Stanford CS231n|[click](https://www.youtube.com/playlist?list=PLkt2uSq6rBVctENoV
 Sub-Category | Link  | Comment
 --- | --- |---
 CARLA|[click](http://www.carla.org)| open-source simulator for autonomous driving research
+
+# Miscellaneous
+Sub-Category | Link  | Comment
+--- | --- |---
+Articles/Distill|[click](https://distill.pub)| Distill
