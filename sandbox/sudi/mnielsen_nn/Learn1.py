@@ -1,3 +1,4 @@
+# create a top-level flow to use the underlying NN
 import sys
 sys.path.append('./src')
 

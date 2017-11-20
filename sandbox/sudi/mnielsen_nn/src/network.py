@@ -9,6 +9,8 @@ simple, easily readable, and easily modifiable.  It is not optimized,
 and omits many desirable features.
 """
 
+# SUDI: added several features to help visialize the cost / accuracy_X
+
 #### Libraries
 # Standard library
 import random
