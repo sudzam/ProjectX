@@ -14,14 +14,15 @@ and omits many desirable features.
 #### Libraries
 # Standard library
 import random
+import itertools
+import sys
 
 # Third-party libraries
 import numpy as np
 import visualization as vsl
 
 class Network(object):
-# SUDI: looks ok
-    def __init__(self, sizes,debug=0):
+    def __init__(self, sizes,debug=0,do_hist=0,norm_weights=1):
         """The list ``sizes`` contains the number of neurons in the
         respective layers of the network.  For example, if the list
         was [2, 3, 1] then it would be a three-layer network, with the
@@ -32,15 +33,40 @@ class Network(object):
         layer is assumed to be an input layer, and by convention we
         won't set any biases for those neurons, since biases are only
         ever used in computing the outputs from later layers."""
+        # network architecture, tuning
         self.num_layers = len(sizes)
         self.sizes = sizes
+        self.norm_weights=norm_weights
+
+        # Miscellaneous
+        self.do_hist  = do_hist
+        self.activations_cum = [[0]] * self.num_layers
+        self.do_cost_comp=1
         self.debug = debug
         self.cost  = 0
-        print ("Network: layers=%d sizes=%s\n" %(self.num_layers,self.sizes));
+
+        print ("\nNNetwork:: layers=%d sizes=%s plot_hist=%d norm_weights=%d\n" %(self.num_layers,self.sizes,self.do_hist,self.norm_weights));
 
 # SUDI: these are actually lists containing arrays
-        self.biases  = [np.random.randn(y, 1) for y in sizes[1:]]
-        self.weights = [np.random.randn(y, x) for x, y in zip(sizes[:-1], sizes[1:])]
+        # (SUDI) added weight initialization, see 231n/lecture 5
+        # look at batch normalization
+        # added sqrt(y) for biases => not sure if it'll help
+        # added a scale factor
+        if (self.norm_weights):
+            scale=0.01
+            self.biases  = [(scale*(np.random.randn(y, 1)/np.sqrt(y))) for y in sizes[1:]]
+            self.weights = [(scale*(np.random.randn(y, x)/np.sqrt(x))) for x, y in zip(sizes[:-1], sizes[1:])]
+        else:
+            scale=1
+            self.biases  = [(scale*np.random.randn(y, 1)) for y in sizes[1:]]
+            self.weights = [(scale*np.random.randn(y, x)) for x, y in zip(sizes[:-1], sizes[1:])]
+
+        # print some debug info
+        for indx,bias_element in enumerate(self.biases):
+            print "biases::  layer=%d shape=%s" %((indx+1),bias_element.shape)
+
+        for indx,wt_element in enumerate(self.weights):
+            print "weights:: layer=%d shape=%s" %((indx+1),wt_element.shape)
 
     def feedforward(self, a):
         """Return the output of the network if ``a`` is input."""
@@ -66,7 +92,7 @@ class Network(object):
         epoch_X    = list()
         cost_Y     = list()
 
-        print ("SGD: train_size=%d epochs=%d mini_batch_size=%d eta=%2.3f" \
+        print ("\nSGD: train_size=%d epochs=%d mini_batch_size=%d eta=%2.3f" \
         %(len(training_data), epochs, mini_batch_size, eta));
 
         accuracy   = 0
@@ -85,19 +111,30 @@ class Network(object):
                 for k in xrange(0, n, mini_batch_size)]
 
             # this loop is called (n/mini_batch_size) times
+            batch_count=0
             for mini_batch in mini_batches:
-                self.update_mini_batch(mini_batch, eta)
+                self.update_mini_batch(mini_batch, eta,batch_count)
                 epoch_cost  += self.cost
+                batch_count+=1
+
+
+            # plot histogram
+            comb = []
+            if (self.do_hist):
+                for layer,act in enumerate(self.activations_cum[1:]):
+                    comb.append(list(itertools.chain.from_iterable(act)))
+                vsl.hist_plot(comb,'epoch: ' + str(j), hold=1,epoch=j)
+                vsl.clear_plot()
 
             # cost related
             epoch_X.append(j)
             cost_Y.append(epoch_cost)
             prev_cost = cost_Y[j-1]
             cost_diff = 0 if (j==0) else (((epoch_cost-prev_cost)/prev_cost) * 100.0)
-            print ('\n(train)Epoch %02d: Cost:%03.2f(%03.2f)' %(j,epoch_cost,cost_diff))
+            print ('\n(train)Epoch %02d: Cost:%03.6f(%03.2f)' %(j,epoch_cost,cost_diff))
 
             # even if test_data is provided only check every 4 epochs
-            if test_data and (j%1==0):
+            if test_data and (self.do_cost_comp):
                 num_correct = self.evaluate(test_data)
                 temp        = accuracy
                 accuracy = (float(num_correct) / float(n_test)) * 100.0
@@ -105,14 +142,14 @@ class Network(object):
                 accuracy_X.append(j)
                 accuracy_Y.append(accuracy)
 
-                print ('(test) Epoch %02d: %03.2f (%02.2f)' %(j, accuracy,change))
+                print ('(test) Epoch %02d: %03.6f (%02.2f)' %(j, accuracy,change))
             else:
                 print ('(test) Epoch %02d: completed' %(j))
         # plot
         vsl.scatter_plot(accuracy_X,'epoch',accuracy_Y,'accuracy','accuracy')
         vsl.scatter_plot(epoch_X,   'epoch',cost_Y,    'cost',   'cost v/s epoch')
 
-    def update_mini_batch(self, mini_batch, eta):
+    def update_mini_batch(self, mini_batch, eta, batch_count):
         """Update the network's weights and biases by applying
         gradient descent using backpropagation to a single mini batch.
         The ``mini_batch`` is a list of tuples ``(x, y)``, and ``eta``
@@ -121,11 +158,23 @@ class Network(object):
         nabla_w = [np.zeros(w.shape) for w in self.weights]
 
         # accumulate the delta for each sample of the batch
+
+        sample_count=0
         for x, y in mini_batch:
             # backprop across the samples in the mini_batch
-            delta_nabla_b, delta_nabla_w = self.backprop(x, y)
+            delta_nabla_b, delta_nabla_w,activations = self.backprop(x, y)
             nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
             nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
+
+            # for histogram plot
+            if (self.do_hist and sample_count==0):
+                first_sample_of_batch = 1 if (batch_count==0 and sample_count==0) else 0
+                for indx,acts in enumerate(activations):
+                    if (first_sample_of_batch):
+                        self.activations_cum[indx] = np.ndarray.tolist(activations[indx])
+                    else:
+                        self.activations_cum[indx] = self.activations_cum[indx] + np.ndarray.tolist(activations[indx])
+                sample_count+=1
 
         # update the bias/weights
         self.weights = [w-(eta/len(mini_batch))*nw
@@ -181,7 +230,7 @@ class Network(object):
             nabla_w[cur_layer] = np.dot(delta, activations[cur_layer-1].transpose())
 
         # done computing, return values
-        return (nabla_b, nabla_w)
+        return (nabla_b, nabla_w,activations)
 
     def evaluate(self, test_data):
         """Return the number of test inputs for which the neural
