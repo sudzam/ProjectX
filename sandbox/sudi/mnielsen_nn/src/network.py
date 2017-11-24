@@ -22,7 +22,7 @@ import numpy as np
 import visualization as vsl
 
 class Network(object):
-    def __init__(self, sizes,debug=0,do_hist=0,norm_weights=1):
+    def __init__(self, sizes,debug=0,do_hist=0,norm_weights=1,randomize=1,momentum=0):
         """The list ``sizes`` contains the number of neurons in the
         respective layers of the network.  For example, if the list
         was [2, 3, 1] then it would be a three-layer network, with the
@@ -33,6 +33,7 @@ class Network(object):
         layer is assumed to be an input layer, and by convention we
         won't set any biases for those neurons, since biases are only
         ever used in computing the outputs from later layers."""
+
         # network architecture, tuning
         self.num_layers = len(sizes)
         self.sizes = sizes
@@ -44,15 +45,23 @@ class Network(object):
         self.do_cost_comp=1
         self.debug = debug
         self.cost  = 0
+        self.randomize = randomize
+        self.seed      = 0x0
 
-        print ("\nNNetwork:: layers=%d sizes=%s plot_hist=%d norm_weights=%d\n" %(self.num_layers,self.sizes,self.do_hist,self.norm_weights));
+        print ("\nNNetwork:: layers=%d sizes=%s plot_hist=%d" %(self.num_layers,self.sizes,self.do_hist));
+        if self.randomize==0:
+            print ('NNetwork:: WARNING: randomization disaled')
 
 # SUDI: these are actually lists containing arrays
-        # (SUDI) added weight initialization, see 231n/lecture 5
-        # look at batch normalization
+        # (SUDI) added weight initialization, see 231n/lecture 5 (Xavier initialization)
+        # look at batch normalization (more complex)
         # added sqrt(y) for biases => not sure if it'll help
         # added a scale factor
+        if self.randomize==0:
+            np.random.seed(self.seed)
+
         if (self.norm_weights):
+            print ('NNetwork:: weight normalization enabled');
             scale=0.01
             self.biases  = [(scale*(np.random.randn(y, 1)/np.sqrt(y))) for y in sizes[1:]]
             self.weights = [(scale*(np.random.randn(y, x)/np.sqrt(x))) for x, y in zip(sizes[:-1], sizes[1:])]
@@ -60,6 +69,14 @@ class Network(object):
             scale=1
             self.biases  = [(scale*np.random.randn(y, 1)) for y in sizes[1:]]
             self.weights = [(scale*np.random.randn(y, x)) for x, y in zip(sizes[:-1], sizes[1:])]
+
+        # momentum (TODO)
+        self.momentum = momentum
+        if self.momentum:
+            print ('NNetwork:: momentum enabled');
+            self.velocity_w = [np.zeros((y, x)) for x, y in zip(sizes[:-1], sizes[1:]) ]
+            self.velocity_b = [np.zeros((y, 1)) for y in sizes[1:]]
+            self.mu       = 0.5
 
         # print some debug info
         for indx,bias_element in enumerate(self.biases):
@@ -99,10 +116,14 @@ class Network(object):
 
         if test_data: n_test = len(test_data)
         n = len(training_data)
+        last_epoch = epochs-1
         for j in xrange(epochs):
             epoch_cost = 0
 
             # shuffle order in training_data
+            # to maitain same behavior, the seed setting MUST be lept here
+            if(self.randomize==0):
+                random.seed   (self.seed)
             random.shuffle(training_data)
 
             # list of lists each of size=mini_batch_size
@@ -118,13 +139,13 @@ class Network(object):
                 batch_count+=1
 
 
-            # plot histogram
+            # plot histogram of activations
             comb = []
             if (self.do_hist):
+                save_hist = 1 if (j==last_epoch) else 0
                 for layer,act in enumerate(self.activations_cum[1:]):
                     comb.append(list(itertools.chain.from_iterable(act)))
-                vsl.hist_plot(comb,'epoch: ' + str(j), hold=1,epoch=j)
-                vsl.clear_plot()
+                vsl.hist_plot(comb,'epoch: ' + str(j), hold=1,epoch=j,save=save_hist)
 
             # cost related
             epoch_X.append(j)
@@ -146,8 +167,8 @@ class Network(object):
             else:
                 print ('(test) Epoch %02d: completed' %(j))
         # plot
-        vsl.scatter_plot(accuracy_X,'epoch',accuracy_Y,'accuracy','accuracy')
-        vsl.scatter_plot(epoch_X,   'epoch',cost_Y,    'cost',   'cost v/s epoch')
+        vsl.scatter_plot(accuracy_X,'epoch',accuracy_Y,'accuracy','accuracy',save=1,fname='accuracy')
+        vsl.scatter_plot(epoch_X,   'epoch',cost_Y,    'cost',   'cost v/s epoch', save=1, fname='cost')
 
     def update_mini_batch(self, mini_batch, eta, batch_count):
         """Update the network's weights and biases by applying
@@ -177,10 +198,25 @@ class Network(object):
                 sample_count+=1
 
         # update the bias/weights
-        self.weights = [w-(eta/len(mini_batch))*nw
-                        for w, nw in zip(self.weights, nabla_w)]
-        self.biases = [b-(eta/len(mini_batch))*nb
-                       for b, nb in zip(self.biases, nabla_b)]
+        if (self.momentum==0):
+            self.weights = [w-(eta/len(mini_batch))*nw
+                            for w, nw in zip(self.weights, nabla_w)]
+            self.biases = [b-(eta/len(mini_batch))*nb
+                           for b, nb in zip(self.biases, nabla_b)]
+        else:
+            # update velocity
+            self.velocity_w = [ (self.mu*vel_w) -  ((eta/len(mini_batch))*nw)
+                              for nw,vel_w in zip(nabla_w,self.velocity_w)]
+
+            self.velocity_b = [ (self.mu*vel_b) -  ((eta/len(mini_batch))*nb)
+                              for nb,vel_b in zip(nabla_b,self.velocity_b)]
+
+            # update weights/biases
+            self.weights =  [ (w + vel_w)
+                              for w,vel_w in zip(self.weights, self.velocity_w)]
+            self.biases  =  [ (b + vel_b)
+                              for b,vel_b in zip(self.biases,  self.velocity_b)]
+
 
     def backprop(self, x, y):
         """Return a tuple ``(nabla_b, nabla_w)`` representing the
