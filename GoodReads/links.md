@@ -8,12 +8,14 @@
 Sub-Category | Link  | Comment
 --- | --- |---
 Overview|[click](http://neuralnetworksanddeeplearning.com) | Michael Nielsen's site
+ML & DL Tutorials | [click](https://github.com/ujjwalkarn/Machine-Learning-Tutorials/blob/master/README.md)| compilation of Machine & Deep Learning Tutorials
 ---
 
 # ConvNets
 Sub-Category | Link  | Comment
 --- | --- |---
 Stanford CS231n|[click](https://www.youtube.com/playlist?list=PLkt2uSq6rBVctENoVBg1TpCC7OQi31AlC)|Winter 2016
+Visualization | [click](http://scs.ryerson.ca/~aharley/vis/conv/flat.html)| nice Visualization of conv nets
 ---
 
 # ADAS
