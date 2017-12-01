@@ -22,9 +22,17 @@ Visualization | [click](http://scs.ryerson.ca/~aharley/vis/conv/flat.html)| nice
 Sub-Category | Link  | Comment
 --- | --- |---
 CARLA|[click](http://www.carla.org)| open-source simulator for autonomous driving research
+SqueezeDet|[click](https://arxiv.org/pdf/1612.01051v3.pdf)| SqueezeDet: Unified, Small, Low Power Fully Convolutional NNfor RT Object Detection ..
+
 ---
 
 # Miscellaneous
 Sub-Category | Link  | Comment
 --- | --- |---
 Articles/Distill|[click](https://distill.pub)| Distill
+
+# Useful Blogs
+Blogger Name | Link  | Comment
+--- | --- |---
+Chris Olah |[click](https://colah.github.io)| Great stuff on CNN, RNN, Visualizations etc
+Ujjwal Karn|[click](https://ujjwalkarn.me/blog/)| The CNN post was good
