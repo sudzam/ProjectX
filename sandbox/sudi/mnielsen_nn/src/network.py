@@ -70,13 +70,17 @@ class Network(object):
             self.biases  = [(scale*np.random.randn(y, 1)) for y in sizes[1:]]
             self.weights = [(scale*np.random.randn(y, x)) for x, y in zip(sizes[:-1], sizes[1:])]
 
-        # momentum (TODO)
+        # momentum (basic done)
+        # TODO: nesterov momentum update (nesterov accelerated gradient)
         self.momentum = momentum
         if self.momentum:
             print ('NNetwork:: momentum enabled');
             self.velocity_w = [np.zeros((y, x)) for x, y in zip(sizes[:-1], sizes[1:]) ]
             self.velocity_b = [np.zeros((y, 1)) for y in sizes[1:]]
             self.mu       = 0.5
+
+        # TODO: adagrad, rmsprop, Adam
+        # TODO: dropout
 
         # print some debug info
         for indx,bias_element in enumerate(self.biases):
@@ -109,14 +113,17 @@ class Network(object):
         epoch_X    = list()
         cost_Y     = list()
 
+        # TODO: decay learning-rate(eta) .. lecture 6
         print ("\nSGD: train_size=%d epochs=%d mini_batch_size=%d eta=%2.3f" \
         %(len(training_data), epochs, mini_batch_size, eta));
 
-        accuracy   = 0
+        accuracy  = 0
 
         if test_data: n_test = len(test_data)
         n = len(training_data)
         last_epoch = epochs-1
+        check_frequency = 1 if(epochs<=10) else 1
+
         for j in xrange(epochs):
             epoch_cost = 0
 
@@ -154,8 +161,8 @@ class Network(object):
             cost_diff = 0 if (j==0) else (((epoch_cost-prev_cost)/prev_cost) * 100.0)
             print ('\n(train)Epoch %02d: Cost:%03.6f(%03.2f)' %(j,epoch_cost,cost_diff))
 
-            # even if test_data is provided only check every 4 epochs
-            if test_data and (self.do_cost_comp):
+            # even if test_data is provided only check every 'check_frequency' epochs
+            if test_data and (self.do_cost_comp) and ((j==last_epoch) or (j%check_frequency==0)):
                 num_correct = self.evaluate(test_data)
                 temp        = accuracy
                 accuracy = (float(num_correct) / float(n_test)) * 100.0
@@ -198,6 +205,7 @@ class Network(object):
                 sample_count+=1
 
         # update the bias/weights
+        # TODO: regularization
         if (self.momentum==0):
             self.weights = [w-(eta/len(mini_batch))*nw
                             for w, nw in zip(self.weights, nabla_w)]

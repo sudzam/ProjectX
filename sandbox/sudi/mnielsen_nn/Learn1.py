@@ -52,7 +52,6 @@ all_layer = [input_layer_nodes] + hidden_layer + [last_layer_nodes]
 
 # setup the network
 randomize = 0 if args.no_random == 1 else 0
-print 'radomize=',randomize
 net = network.Network(all_layer,
    norm_weights=args.norm_weights,do_hist=args.plot_act_hist,randomize=randomize,
    momentum=args.momentum
