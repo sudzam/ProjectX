@@ -24,6 +24,7 @@ Sub-Category | Link  | Comment
 --- | --- |---
 CARLA|[click](http://www.carla.org)| open-source simulator for autonomous driving research
 SqueezeDet|[click](https://arxiv.org/pdf/1612.01051v3.pdf)| SqueezeDet: Unified, Small, Low Power Fully Convolutional NNfor RT Object Detection ..
+Apollo|[click](http://apollo.auto) | Open Source ADAS platform (from Baidu)
 
 ---
 
