@@ -10,6 +10,7 @@ Sub-Category | Link  | Comment
 Overview|[click](http://neuralnetworksanddeeplearning.com) | Michael Nielsen's site
 ML & DL Tutorials | [click](https://github.com/ujjwalkarn/Machine-Learning-Tutorials/blob/master/README.md)| compilation of Machine & Deep Learning Tutorials
 Deep Learning School|YouTube links|see separate section (down below)
+Frameworks|[click](https://github.com/zer0n/deepframeworks/blob/master/README.md)|comparison of DeepLearning frameworks (as of early 2016)
 ---
 
 # ConvNets
@@ -32,6 +33,7 @@ Apollo|[click](http://apollo.auto) | Open Source ADAS platform (from Baidu)
 Sub-Category | Link  | Comment
 --- | --- |---
 Articles/Distill|[click](https://distill.pub)| Distill
+Overall View of NN|[click](http://www.asimovinstitute.org/neural-network-zoo/)|Neural Network Zoo
 
 ---
 # Useful Blogs
