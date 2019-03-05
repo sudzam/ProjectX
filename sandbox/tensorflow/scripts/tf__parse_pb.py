@@ -1,4 +1,16 @@
 """
+   SOURCES:
+   1. https://www.tensorflow.org/guide/extend/model_files
+   Proto Sources:
+    - https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/framework/graph.proto
+    - https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/framework/node_def.proto
+    - https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/framework/attr_value.proto
+    - https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/framework/types.proto
+
+   USE: parse TF graph..
+"""
+
+"""
 import tensorflow as tf
 from tensorflow.python.platform import gfile
 
@@ -46,6 +58,7 @@ with tf.Session() as sess:
    vals  = []
    for t in graph_nodes:
       print(t)
+
 
 """
       names.append(t.name)
