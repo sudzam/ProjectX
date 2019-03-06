@@ -74,11 +74,12 @@ with tf.Session() as sess:
       op_dict=None,
       producer_op_list=None
    )
-   v1 = sess.graph.get_tensor_by_name('W:0')
-   sess.run(tf.assign(v1, [[6, 6], [5, 5], [4, 4]]))
+   #v1 = sess.graph.get_tensor_by_name('W:0')
+   #sess.run(tf.assign(v1, [[6, 6], [5, 5], [4, 4]]))
 
    myl = [n.name for n in tf.get_default_graph().as_graph_def().node]
    print (myl)
+   print (sess.graph.get_operations())
 
    meta_graph_def = tf.train.export_meta_graph(filename='/tmp/my-model.meta')
 
