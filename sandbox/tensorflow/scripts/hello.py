@@ -13,7 +13,7 @@ convert to tflite:
 import tensorflow as tf
 from tensorflow.python.tools import freeze_graph
 
-MODEL_NAME = 'HelloTF'
+MODEL_NAME = 'HelloTFQuantTrain'
 DST_PATH   = '/home/sudi/TMP/helloTF'
 
 input_graph_path            = DST_PATH + "/" + MODEL_NAME + '.pbtxt'
@@ -37,7 +37,9 @@ I = tf.placeholder(tf.float32, shape=[None,3],           name='INPUT') # input
 # variables are trainable (i.e. parameters)
 W = tf.Variable(tf.zeros(shape=[3,2]), dtype=tf.float32, name='WEIGHT') # weights
 b = tf.Variable(tf.zeros(shape=[2]),   dtype=tf.float32, name='bias') # biases
-O = tf.nn.relu(tf.matmul(I, W) + b,                      name='OUTPUT') # activation / output
+#O = tf.nn.relu(tf.matmul(I, W) + b,                      name='OUTPUT') # activation / output
+m = tf.matmul(I, W) + b
+O = tf.identity(m,name='OUTPUT')  # activation / output
 
 # expected output
 y    = tf.placeholder(dtype=tf.float32, shape=O.shape)
@@ -47,7 +49,7 @@ sq   = tf.square(O-y)
 loss = tf.reduce_sum(sq)
 
 g=tf.get_default_graph()
-tf.contrib.quantize.create_training_graph(input_graph=g, quant_delay=100)
+tf.contrib.quantize.create_training_graph(input_graph=g, quant_delay=5000)
 
 # optimizer
 optimizer = tf.train.GradientDescentOptimizer(0.001)
@@ -77,7 +79,7 @@ with tf.Session() as sess:
   I_feed = [[1,2,3]]
 
   # expected values
-  y_feed = [[5.3,32.43]]
+  y_feed = [[-5.3,32.43]]
 
   num_epoch = 1000
   print("#### TRAINING STARTS ####")
@@ -86,6 +88,7 @@ with tf.Session() as sess:
     _,Lv,Ov = sess.run([train,loss,O],feed_dict={I:I_feed,y:y_feed})
   if i==num_epoch-1:
     print("Final Loss:",Lv)
+    print("Final Val:", Ov)
 
   print ("#### AFTER TRAINING ####")
   print ("Weights:")
